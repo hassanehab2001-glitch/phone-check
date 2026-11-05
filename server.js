@@ -704,6 +704,119 @@ for (const [key, value] of Object.entries(info)) {
 }
 </script>
 
+<script>
+if (/Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent)) {
+    window.location.replace('/join');
+}
+</script>
+
+</body>
+</html>
+    `);
+});
+
+
+// صفحة انضمام الموبايل
+app.get('/join', (req, res) => {
+    res.send(`
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Phone Check - انضمام جهاز</title>
+<style>
+body {
+    margin: 0;
+    padding: 25px;
+    background: #101827;
+    color: white;
+    font-family: Arial, sans-serif;
+}
+.card {
+    max-width: 420px;
+    margin: 70px auto;
+    padding: 25px;
+    background: #1e293b;
+    border-radius: 15px;
+    text-align: center;
+}
+input, button {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 14px;
+    margin-top: 15px;
+    border: 0;
+    border-radius: 8px;
+    font-size: 17px;
+}
+input { text-align: center; text-transform: uppercase; }
+button { background: #0ea5e9; color: white; }
+button:disabled { opacity: .5; }
+#status { margin-top: 20px; line-height: 1.8; }
+</style>
+<script src="/socket.io/socket.io.js"></script>
+</head>
+<body>
+<div class="card">
+    <h2>Phone Check</h2>
+    <p>أدخل كود الجلسة للانضمام</p>
+    <input id="code" maxlength="8" placeholder="كود الجلسة">
+    <button id="joinBtn">طلب الانضمام</button>
+    <div id="status">جاري الاتصال بالسيرفر...</div>
+</div>
+
+<script>
+const socket = io();
+const codeInput = document.getElementById('code');
+const joinBtn = document.getElementById('joinBtn');
+const statusBox = document.getElementById('status');
+
+socket.on('connect', () => {
+    statusBox.textContent = 'متصل بالسيرفر';
+});
+
+socket.on('disconnect', () => {
+    statusBox.textContent = 'انقطع الاتصال بالسيرفر';
+    joinBtn.disabled = false;
+});
+
+joinBtn.addEventListener('click', () => {
+    const code = codeInput.value.trim().toUpperCase();
+
+    if (!code) {
+        statusBox.textContent = 'اكتب كود الجلسة أولًا';
+        return;
+    }
+
+    joinBtn.disabled = true;
+    statusBox.textContent = 'جاري إرسال طلب الانضمام...';
+    socket.emit('join-session', code);
+});
+
+socket.on('join-pending', (data) => {
+    statusBox.textContent = data.message;
+});
+
+socket.on('session-approved', (data) => {
+    statusBox.textContent = data.message;
+});
+
+socket.on('session-rejected', (data) => {
+    statusBox.textContent = data.message;
+    joinBtn.disabled = false;
+});
+
+socket.on('session-ended', (data) => {
+    statusBox.textContent = data.message;
+    joinBtn.disabled = false;
+});
+
+socket.on('session-error', (message) => {
+    statusBox.textContent = message;
+    joinBtn.disabled = false;
+});
+</script>
 </body>
 </html>
     `);
