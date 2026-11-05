@@ -160,36 +160,19 @@ io.on('connection', (socket) => {
             return;
         }
 
-        const existingRequest = [...session.requests.values()]
-            .find(request => request.deviceId === socket.id);
+        socket.join(code);
+        session.participants.add(socket.id);
 
-        if (existingRequest) {
-            socket.emit('join-pending', {
-                message: 'طلبك قيد الانتظار'
-            });
-            return;
-        }
+        socket.emit('session-approved', {
+            message: 'تم الاتصال بالجلسة بنجاح'
+        });
 
-        const requestId = crypto.randomUUID();
-
-        session.requests.set(requestId, {
+        io.to(session.owner).emit('device-approved', {
             deviceId: socket.id,
-            createdAt: Date.now(),
-            expiresAt: Date.now() + REQUEST_DURATION
+            message: 'انضم جهاز جديد تلقائيًا'
         });
 
-        socket.emit('join-pending', {
-            requestId,
-            message: 'تم إرسال طلب الانضمام وينتظر موافقة اللابتوب'
-        });
-
-        io.to(session.owner).emit('join-request', {
-            requestId,
-            deviceId: socket.id,
-            message: 'يوجد جهاز يطلب الانضمام'
-        });
-
-        console.log('Join request:', code, socket.id);
+        console.log('Device joined:', code, socket.id);
     });
 
     // موافقة صاحب اللابتوب
