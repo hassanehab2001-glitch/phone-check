@@ -705,7 +705,7 @@ for (const [key, value] of Object.entries(info)) {
 </script>
 
 <script>
-if (/Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent)) {
+if (window.matchMedia('(max-width: 768px)').matches) {
     window.location.replace('/join');
 }
 </script>
